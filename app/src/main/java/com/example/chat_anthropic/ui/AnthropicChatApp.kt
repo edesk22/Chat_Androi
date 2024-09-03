@@ -15,12 +15,9 @@ import com.example.chat_anthropic.ui.screens.HomeScreen
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun AnthropicChatApp(
-    modifier: Modifier
-) {
+fun AnthropicChatApp() {
     val anthropicViewModel: HomeScreenViewModel = viewModel()
     HomeScreen(
-        anthropicUiState= anthropicViewModel.anthropicUiState,
-        modifier = modifier
+        anthropicUiState= anthropicViewModel.anthropicUiState
     )
 }

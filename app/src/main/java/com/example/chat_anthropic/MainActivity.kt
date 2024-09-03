@@ -46,16 +46,9 @@ import com.example.chat_anthropic.ui.theme.Chat_AnthropicTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             Chat_AnthropicTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                        AnthropicChatApp(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                    AnthropicChatApp()
             }
         }
     }

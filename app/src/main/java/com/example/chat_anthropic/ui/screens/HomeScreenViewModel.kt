@@ -1,9 +1,11 @@
 package com.example.chat_anthropic.ui.screens
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chat_anthropic.model.AnthropicRequest
@@ -15,67 +17,77 @@ import okio.IOException
 import retrofit2.HttpException
 
 sealed interface AnthropicUiState {
-    data class Success(val respuesta: String) : AnthropicUiState
+    data class Success(val respuesta: List<ChatMessage>) : AnthropicUiState
     data class Error(val message: String) : AnthropicUiState
-    object Loading : AnthropicUiState
+    //object Loading : AnthropicUiState
 }
 
-class HomeScreenViewModel: ViewModel() {
+data class ChatMessage(
+    val role: String,
+    val content: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
 
-    var anthropicUiState: AnthropicUiState by mutableStateOf(AnthropicUiState.Loading)
+class HomeScreenViewModel : ViewModel() {
+
+    var anthropicUiState: AnthropicUiState by mutableStateOf(AnthropicUiState.Success(emptyList()))
         private set
 
     var inputText by mutableStateOf("")
         private set
-    fun updateInputText(new:String){
-        inputText=new
+    fun updateInputText(new: String) {
+        inputText = new
     }
 
-    fun postAnthropicChat() {
+    private val _messages = mutableStateListOf<ChatMessage>()
+    val messages: SnapshotStateList<ChatMessage> = _messages
+
+    fun sendMessage() {
+
         viewModelScope.launch {
 
-            anthropicUiState = AnthropicUiState.Loading
+            if (inputText.isBlank()) {
+                return@launch
+            }
+
+            val userMessage = ChatMessage(role = "user", content = inputText)
+
+            _messages.add(userMessage)
+            updateUiState()
+
+            //anthropicUiState = AnthropicUiState.Loading
 
             val request = AnthropicRequest(
                 model = "claude-3-5-sonnet-20240620",
                 maxTokens = 1024,
-                messages = listOf(Message(role = "user", content = inputText))
+                messages = _messages.map { Message(role = it.role, content = it.content) }
             )
 
-            if (inputText.isBlank()) {
-                anthropicUiState = AnthropicUiState.Error("El mensaje no puede estar vacío")
-                return@launch
-            }
-
-            anthropicUiState = try {
+            try {
                 val chatResult = AnthropicApi.retrofitService.sendMessage(request)
-                AnthropicUiState.Success(chatResult.toFormattedString())
-            } catch (e: HttpException) {
-                // Manejar error HTTP
-                AnthropicUiState.Error("HTTP ${e.code()}: ${e.message()}")
-            } catch (e: IOException) {
-                // Manejar error de red
-                AnthropicUiState.Error("Network error: ${e.message}")
+                val assistantMessage = ChatMessage(
+                    role = "assistant",
+                    content = chatResult.content.firstOrNull()?.text ?: ""
+                )
+                _messages.add(assistantMessage)
+                updateUiState()
             } catch (e: Exception) {
-                // Manejar otros errores
-                AnthropicUiState.Error("Unexpected error: ${e.message}")
+                anthropicUiState = AnthropicUiState.Error("Error: ${e.message}")
             }
+            inputText = ""
         }
     }
 
-    fun AnthropicResponse.toFormattedString(): String {
-        return this.content.joinToString("") { it.text }.trim()
+    private fun updateUiState() {
+        anthropicUiState = AnthropicUiState.Success(_messages.toList())
     }
-//    fun AnthropicResponse.toFormattedString(): String {
-//        return """
-//        ID: ${this.id}
-//        Role: ${this.role}
-//        Content: ${this.content.joinToString { it.text }}
-//        Model: ${this.model}
-//        Stop Reason: ${this.stopReason}
-//        Input Tokens: ${this.usage.inputTokens}
-//        Output Tokens: ${this.usage.outputTokens}
-//    """.trimIndent()
-//    }
-
 }
+
+fun Message.toChatMessage() = ChatMessage(role = role, content = content)
+
+fun ChatMessage.toMessage() = Message(role = role, content = content)
+
+fun AnthropicResponse.toChatMessage() = ChatMessage(
+    role = role,
+    content = content.firstOrNull()?.text ?: ""
+)
