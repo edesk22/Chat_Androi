@@ -15,6 +15,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
+    id("com.google.devtools.ksp") version "1.9.20-1.0.14"
 }
 
 android {
@@ -95,4 +96,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.logging.interceptor)
     implementation (libs.richtext.commonmark)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.core.ktx.v1120)
+    implementation(libs.androidx.room.ktx)
+
+    ksp("androidx.room:room-compiler:2.6.0")
 }

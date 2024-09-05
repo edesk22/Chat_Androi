@@ -160,7 +160,7 @@ fun LoadingScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Chat Anthropic") },
+                title = { Text("com.example.chat_anthropic.data.Chat Anthropic") },
                 navigationIcon = {
                     IconButton(onClick = { /* Acción de retroceso */ }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
@@ -198,7 +198,7 @@ fun ErrorScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Chat Anthropic") },
+                title = { Text("com.example.chat_anthropic.data.Chat Anthropic") },
                 navigationIcon = {
                     IconButton(onClick = { /* Acción de retroceso */ }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
